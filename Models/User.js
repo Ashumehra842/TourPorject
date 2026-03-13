@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const bcrypt = require('bcryptjs');
 const schema = mongoose.Schema({
     name: {
         type: String,
@@ -8,32 +9,63 @@ const schema = mongoose.Schema({
         minlength: 3,
         maxlength: 50
     },
-    email:{
-        type:String,
-        required:[true, 'Email is Required.'],
-        unique:true,
-        lowercase:true,
-        trim:true,
-        validate:[validator.isEmail, 'Please provide valid email.']
+    email: {
+        type: String,
+        required: [true, 'Email is Required.'],
+        unique: true,
+        lowercase: true,
+        trim: true,
+        validate: [validator.isEmail, 'Please provide valid email.']
 
     },
-    phone:{
-        type:String,
-        required:[true, 'Phone is Required.']
+    password: {
+        type: String,
+        required: [true, 'Password is Required.'],
+        minlength: 8,
+        select: false
     },
-    role:{
-        type:String,
-        enum:["user","guide","admin"],
-        default:"user"
+    passwordConfirm: {
+        type: String,
+        required: [true, 'Confirm Password is Required.'],
+        validate: {
+            validator: function (el) {
+                return el === this.password;
+            },
+            message: 'Password and Confirm Password are not same.'
+        }
     },
-    profile:{
-        type:String,
-        default:"default.jpg"
+
+    phone: {
+        type: String,
+        required: [true, 'Phone is Required.']
     },
-    isActive:{
-        type:Boolean,
-        default:true
+    role: {
+        type: String,
+        enum: ["user", "guide", "admin"],
+        default: "user"
+    },
+    profile: {
+        type: String,
+        default: "default.jpg"
+    },
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    passwordCreatedAt: {
+        type: Date
+    },
+    passwordResetToken: {
+        type: String
     }
-},{
-    timestamps:true
+}, {
+    timestamps: true
 });
+schema.pre('save', async function (next) {
+    if (!this.isModified('password')) return next();
+    this.password = await bcrypt.hash(this.password, 12);
+    this.passwordConfirm = undefined;
+});
+const User = mongoose.model('users', schema);
+
+module.exports = User;

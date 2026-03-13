@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require('mongoose');
 const UserRouter = require("./Routes/UserRoutes");
+const AuthRouter = require("./Routes/AuthRoutes");
 const AppError = require("./ErrorHandler/appError");
 const errorHandler = require("./ErrorHandler/errorHandler");
 const app = express();
@@ -15,6 +16,7 @@ mongoose.connect(process.env.CONNECTION_URL).then(() => {
 });
 
 app.use('/v1/user/', UserRouter);
+app.use('/v1/auth/', AuthRouter);
 
 app.all(/.*/, (req, res, next) => {
 
